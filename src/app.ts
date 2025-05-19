@@ -23,6 +23,8 @@ import userRouter from "./routes/userRoutes";
 // initiating app
 const app = express()
 
+// Middleware to get IP
+app.use(requestIp.mw())
 
 /* middle wares */
 const corsOptions = {
@@ -52,8 +54,7 @@ app.get('/ip', async (req, res) => {
   });
 
 
-// Middleware to get IP
-app.use(requestIp.mw())
+
 
 /* view engine setting */
 app.engine("hbs", engine({
