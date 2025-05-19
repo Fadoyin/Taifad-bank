@@ -100,7 +100,8 @@ export const loginController = expressAsyncHandler(async (req: Request<{}, {}, {
   email: string,
   password: string
 }>, res: Response): Promise<void> => {
-/* find user  */
+  /* find user  */
+ 
   const { email, password } = req.body;
   
  
@@ -127,20 +128,13 @@ const encryptedId = encrypt(user._id)
         { status: "suspended"},
         { new: true } // returns the updated document
      );
-  
-    const clientIp = req.clientIp || req.ip || "unknown";
-
-
-    const {
-      location: {
+      if(!req.clientIp) return
+      const { location: { 
         regionName
-      }, time, ipAddress, status
-    } = await getUserIpFunc(clientIp)
-
-    if(status !== "success"){
-     throw new Error(status)
+      }, time, ipAddress, status} =    await  getUserIpFunc(req.clientIp)
+      if (status !== "success") { 
+        throw new Error("Failed to obtain user ip")
     }
-
   await sendMailjetEmail(req, res, {
         subject: "Failed Loging Attempt",
         to: [
@@ -150,14 +144,15 @@ const encryptedId = encrypt(user._id)
           }
         ],
         emailTemplate: "failedLoginTemplate",
-        mailData: {
-          companyName: "Taifad Bank",
+    mailData: {
+      
+          companyName: "Online bank assessment",
           userName: user.fullName,
          link: `${process.env.SERVER_URL}/api/v1/user/account/suspended/activate/${encryptedId}`,
-           verificationCode: undefined,
-           attemptTime: time,
-           ipAddress: ipAddress,
-           location: regionName
+          verificationCode: undefined,
+          attemptTime:time,
+          ipAddress: ipAddress,
+          location: regionName
         }
 
       })
@@ -195,7 +190,7 @@ const { isEmailVerified } = user;
   /* send email for verification */
 
   const option = {
-    subject: "Verify Account!",
+    subject: "Activate Your Account!",
     emailTemplate:"accountVerification",
   
     to: [
@@ -206,7 +201,7 @@ const { isEmailVerified } = user;
     ],
    
     mailData: {
-      companyName: "Taifad Bank",
+      companyName: "online bank assessment",
       userName: user.fullName,
       link: verifyEmailEndpoint 
     }
@@ -214,45 +209,58 @@ const { isEmailVerified } = user;
 
  await sendMailjetEmail(req, res, option);
 
- throw new Error("Please check your mail to confirm the email since it has not been validated.")
+ throw new Error("Email not verified, please check your mail to verify email")
   }
   
  // check if user is suspended
   if (user.status === "suspended") { 
-    if(!req.clientIp) return 
 
-    const {
-      location: {
-        regionName
-      }, time, ipAddress, status
-    } = await getUserIpFunc(req.clientIp)
+    if(!req.clientIp) return
+    const { location: { 
+      regionName
+    }, time, ipAddress, status} =    await  getUserIpFunc(req.clientIp)
+    if (status !== "success") { 
+        throw new Error("Failed to obtain user ip")
+    }
+await sendMailjetEmail(req, res, {
+      subject: "Failed Loging Attempt",
+      to: [
+        {
+          email,
+           name: user.fullName
+        }
+      ],
+      emailTemplate: "failedLoginTemplate",
+  mailData: {
+    
+        companyName: "Online bank assessment",
+        userName: user.fullName,
+       link: `${process.env.SERVER_URL}/api/v1/user/account/suspended/activate/${encryptedId}`,
+        verificationCode: undefined,
+        attemptTime:time,
+        ipAddress: ipAddress,
+        location: regionName
+      }
 
-    if(status !== "success"){
-     throw new Error(status)
+    })
+  /* await sendBrevoEmail(req, res, {
+    subject: "Failed Loging Attempt",
+    to: [
+      {
+        email,
+         name: user.fullName
+      }
+    ],
+    emailTemplate: "failedLoginTemplate",
+    mailData: {
+      companyName: "Online bank assessment",
+      userName: user.fullName,
+      link: `${process.env.SERVER_URL}/api/v1/user/account/suspended/activate/${encryptedId}`,
+       verificationCode: undefined
     }
 
-  await sendMailjetEmail(req, res, {
-        subject: "Failed Loging Attempt",
-        to: [
-          {
-            email,
-             name: user.fullName
-          }
-        ],
-        emailTemplate: "failedLoginTemplate",
-        mailData: {
-          companyName: "Taifad Bank",
-          userName: user.fullName,
-         link: `${process.env.SERVER_URL}/api/v1/user/account/suspended/activate/${encryptedId}`,
-           verificationCode: undefined,
-           attemptTime: time,
-           ipAddress: ipAddress,
-           location: regionName
-        }
-
-      })
- 
-  throw new Error("Account suspended; to activate, please check your mail.")
+  }) */
+  throw new Error("Account suspended, please check your mail to activate account.")
 }
 
 
@@ -288,7 +296,6 @@ res.cookie("token", token, {
   token
 });
 });
-
 
 /* verify email */
 
