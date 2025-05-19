@@ -8,6 +8,9 @@ import cookieParser from "cookie-parser"
 import dotenv from "dotenv"
 import cors from "cors"
 
+import requestIp from "request-ip"
+import axios from "axios"
+
 
 // configuring dotenv
 dotenv.config()
@@ -32,9 +35,30 @@ const corsOptions = {
 app.use(express.static(path.join(__dirname,"public")))
 
 
+app.get('/ip', async (req, res) => {
+    const ip = req.clientIp;
+  
+    try {
+      // Replace with your preferred IP geolocation API
+      const response = await axios.get(`http://ip-api.com/json/${ip}`);
+      const location = response.data;
+  
+      res.json({
+        location
+      });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch location' });
+    }
+  });
+
+
+// Middleware to get IP
+app.use(requestIp.mw())
+
 /* view engine setting */
 app.engine("hbs", engine({
-    extname: '.hbs'
+    extname: '.hbs',
+     defaultLayout: false
 }))  
 
 

@@ -52,7 +52,6 @@ exports.registerController = (0, express_async_handler_1.default)((req, res) => 
         "/" +
         emailVerificationToken;
     const message = "Please click here " + verifyEmailEndpoint + " to verify your email";
-    console.log("email token created", emailVerificationToken);
     yield registeredUser.save();
     /* send email for verification */
     const option = {

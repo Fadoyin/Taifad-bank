@@ -21,6 +21,7 @@ export interface userSchemaInterface extends Document {
     phoneVerificationCode: String;
     isTransferPinVerified: String;
     isPasswordForgetOtpVerified: Boolean,
+    userIpAddress: String | null
     status: "pending" | "approved" |"rejected" | "suspended";
     createEmailVerificationToken: () => string; 
     comparePassword: (candidatePassword: string) => boolean;
@@ -49,7 +50,10 @@ export interface mailSenderType {
         companyName: string, 
         userName: string,
         link?: string,
-        verificationCode?: number
+        verificationCode?: number,
+        attemptTime?: string,
+        ipAddress?: string,
+        location?: string
     }
 }
 
@@ -111,4 +115,29 @@ export interface bankSchemaType {
     isTransferPinVerificationOTPValid:(cdoe:number)=> boolean
 
 
+}
+
+export interface UserInfo {
+    ip: string;
+    location: {
+      city: string | null;
+      region: string | null;
+      country: string | null;
+      ll: number[]; // [latitude, longitude]
+    };
+    device: {
+      browser: string;
+      os: string;
+      device: string;
+    };
+}
+  
+export interface IpAddressInfo { 
+    time: string,
+    ipAddress: string,
+    location: {
+        country: string,
+        regionName: string
+    },
+    status: string
 }

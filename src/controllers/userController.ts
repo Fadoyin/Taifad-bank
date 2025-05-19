@@ -11,6 +11,7 @@ import UserModel from "../models/user";
 import { IGetUserAuthInfoRequest, registerType, userSchemaInterface } from "../appTypes/types";
 import { TwilloPhoneOtpSender } from "../helpers/sendPhoneOtp";
 import sendMailjetEmail from "../helpers/mailjetSendMail";
+import { getUserIpFunc } from "../helpers/checkUserIp";
 
 
 
@@ -60,7 +61,7 @@ export const registerController = expressAsyncHandler(async (req: Request<{}, {}
     emailVerificationToken;
   const message =
     "Please click here " + verifyEmailEndpoint + " to verify your email";
- console.log("email token created", emailVerificationToken)
+
 
   await registeredUser.save();
   /* send email for verification */
@@ -126,7 +127,19 @@ const encryptedId = encrypt(user._id)
         { status: "suspended"},
         { new: true } // returns the updated document
      );
-    
+    if(!req.clientIp) return 
+
+    const {
+      location: {
+        regionName
+
+      }, time, ipAddress, status
+    } = await getUserIpFunc(req.clientIp)
+
+    if(status !== "success"){
+     throw new Error("Failed to obtain user ip")
+    }
+
   await sendMailjetEmail(req, res, {
         subject: "Failed Loging Attempt",
         to: [
@@ -140,7 +153,10 @@ const encryptedId = encrypt(user._id)
           companyName: "Taifad Bank",
           userName: user.fullName,
          link: `${process.env.SERVER_URL}/api/v1/user/account/suspended/activate/${encryptedId}`,
-           verificationCode: undefined
+           verificationCode: undefined,
+           attemptTime: time,
+           ipAddress: ipAddress,
+           location: regionName
         }
 
       })

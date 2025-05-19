@@ -3,16 +3,18 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon --exec ts-node src/app.ts",
+  "start": "node dist/app.js",
     "build": "tsc",
-    "start": "node dist/app.js"
+    "postbuild": "cpx \"src/views/**/*\" dist/views &&  cpx \"src/public/**/*\" dist/public",
+    "serve": "nodemon --exec ts-node src/app.ts",
+    "heroku-postbuild": "npm run build"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "axios": "^1.8.4",
+    "axios": "^1.9.0",
     "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -23,8 +25,10 @@
     "express-rate-limit": "^7.5.0",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
+    "moment-timezone": "^0.5.48",
     "mongoose": "^8.13.1",
     "node-mailjet": "^6.0.8",
+    "request-ip": "^3.3.0",
     "twilio": "^5.5.1"
   },
   "devDependencies": {
@@ -33,6 +37,8 @@
     "@types/express": "^5.0.1",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.14.0",
+    "@types/request-ip": "^0.0.41",
+    "cpx": "^1.5.0",
     "nodemon": "^3.1.9",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2"
