@@ -22,6 +22,7 @@ const mongooseIdValidity_1 = __importDefault(require("../helpers/mongooseIdValid
 const user_1 = __importDefault(require("../models/user"));
 const sendPhoneOtp_1 = require("../helpers/sendPhoneOtp");
 const mailjetSendMail_1 = __importDefault(require("../helpers/mailjetSendMail"));
+const checkUserIp_1 = require("../helpers/checkUserIp");
 // register  controller
 exports.registerController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, fullName, password, phone, role } = req.body;
@@ -97,6 +98,12 @@ exports.loginController = (0, express_async_handler_1.default)((req, res) => __a
         if (user.failedLoginCount === 2) {
             yield user_1.default.findOneAndUpdate({ email }, { status: "suspended" }, { new: true } // returns the updated document
             );
+            if (!req.clientIp)
+                return;
+            const { location: { regionName }, time, ipAddress, status } = yield (0, checkUserIp_1.getUserIpFunc)(req.clientIp);
+            if (status !== "success") {
+                throw new Error("Failed to obtain user ip");
+            }
             yield (0, mailjetSendMail_1.default)(req, res, {
                 subject: "Failed Loging Attempt",
                 to: [
@@ -110,7 +117,10 @@ exports.loginController = (0, express_async_handler_1.default)((req, res) => __a
                     companyName: "Taifad Bank",
                     userName: user.fullName,
                     link: `${process.env.SERVER_URL}/api/v1/user/account/suspended/activate/${encryptedId}`,
-                    verificationCode: undefined
+                    verificationCode: undefined,
+                    attemptTime: time,
+                    ipAddress: ipAddress,
+                    location: regionName
                 }
             });
             throw new Error("Account suspended, please check your mail to activate account.");
@@ -155,8 +165,14 @@ exports.loginController = (0, express_async_handler_1.default)((req, res) => __a
     }
     // check if user is suspended
     if (user.status === "suspended") {
+        if (!req.clientIp)
+            return;
+        const { location: { regionName }, time, ipAddress, status } = yield (0, checkUserIp_1.getUserIpFunc)(req.clientIp);
+        if (status !== "success") {
+            throw new Error("Failed to obtain user ip");
+        }
         yield (0, mailjetSendMail_1.default)(req, res, {
-            subject: "Login Failed",
+            subject: "Failed Loging Attempt",
             to: [
                 {
                     email,
@@ -165,10 +181,13 @@ exports.loginController = (0, express_async_handler_1.default)((req, res) => __a
             ],
             emailTemplate: "failedLoginTemplate",
             mailData: {
-                companyName: "Taifad bank",
+                companyName: "Taifad Bank",
                 userName: user.fullName,
                 link: `${process.env.SERVER_URL}/api/v1/user/account/suspended/activate/${encryptedId}`,
-                verificationCode: undefined
+                verificationCode: undefined,
+                attemptTime: time,
+                ipAddress: ipAddress,
+                location: regionName
             }
         });
         throw new Error("Account suspended; to activate, please check your mail.");
@@ -263,7 +282,7 @@ exports.forgotPasswordController = (0, express_async_handler_1.default)((req, re
             },
         ],
         mailData: {
-            companyName: "online bank assessment",
+            companyName: "Taifad bank",
             userName: fullName,
             link: "",
             verificationCode: code
@@ -368,8 +387,8 @@ exports.registerPhoneController = (0, express_async_handler_1.default)((req, res
     var _a;
     const id = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     const { phone } = req.body;
-    const isIdVallid = id && (0, mongooseIdValidity_1.default)(id.toString());
-    if (!id || !isIdVallid) {
+    const isIdValid = id && (0, mongooseIdValidity_1.default)(id.toString());
+    if (!id || !isIdValid) {
         res.status(404).json({
             status: "failed",
             message: "Invaild id or id not found",
@@ -409,10 +428,10 @@ exports.verifyPhoneController = (0, express_async_handler_1.default)((req, res) 
     const id = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     const { OTP } = req.body;
     if (!id || !OTP) {
-        throw new Error("Missing crredentials");
+        throw new Error("Missing credentials");
     }
-    const isIdVallid = (0, mongooseIdValidity_1.default)(id.toString());
-    if (!id || !isIdVallid) {
+    const isIdValid = (0, mongooseIdValidity_1.default)(id.toString());
+    if (!id || !isIdValid) {
         res.status(404).json({
             status: "failed",
             message: "Invaild id or id not found",
@@ -452,8 +471,8 @@ exports.verifyPhoneController = (0, express_async_handler_1.default)((req, res) 
 exports.getSingleController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
     const decryptedId = (0, decrypt_1.decrypt)(id);
-    const isIdVallid = (0, mongooseIdValidity_1.default)(decryptedId.toString());
-    if (!id || !isIdVallid) {
+    const isIdValid = (0, mongooseIdValidity_1.default)(decryptedId.toString());
+    if (!id || !isIdValid) {
         res.status(404).json({
             status: "failed",
             message: "Invaild id or id not found",
@@ -478,8 +497,8 @@ exports.deleteController = (0, express_async_handler_1.default)((req, res) => __
     const user = req.user;
     const { id } = req.params;
     const decryptedId = (0, decrypt_1.decrypt)(id);
-    const isIdVallid = (0, mongooseIdValidity_1.default)(decryptedId.toString());
-    if (!id || !isIdVallid) {
+    const isIdValid = (0, mongooseIdValidity_1.default)(decryptedId.toString());
+    if (!id || !isIdValid) {
         res.status(404).json({
             status: "failed",
             message: "Invaild id or id not found",
@@ -617,5 +636,4 @@ exports.suspendedAccountActivation = (0, express_async_handler_1.default)((req, 
         companyName: "Taifad Bank",
         loginUrl: `${process.env.SERVER_URL}/api/v1/user/login`
     });
-    // send user an otp to verifiy user
 }));

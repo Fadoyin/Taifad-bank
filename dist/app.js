@@ -55,7 +55,8 @@ app.get('/ip', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 app.use(request_ip_1.default.mw());
 /* view engine setting */
 app.engine("hbs", (0, express_handlebars_1.engine)({
-    extname: '.hbs'
+    extname: '.hbs',
+    defaultLayout: false
 }));
 // setting up engine
 app.set("view engine", "hbs");
