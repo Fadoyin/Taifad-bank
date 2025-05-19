@@ -5,7 +5,7 @@ import { timeFormaterFunc } from "./timeFormater";
 export const getUserIpFunc = async (ip: string): Promise<IpAddressInfo> => {
   try {
     console.log("ipInput", ip);
-    const response = await axios.get(`https://ip-api.com/json/${ip}`);
+    const response = await axios.get(`http://ip-api.com/json/${ip}`);
     const ipdata = response.data;
 
    
