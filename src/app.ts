@@ -23,6 +23,9 @@ import userRouter from "./routes/userRoutes";
 // initiating app
 const app = express()
 
+app.set('trust proxy', true);
+
+
 // Middleware to get IP
 app.use(requestIp.mw())
 

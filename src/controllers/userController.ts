@@ -127,13 +127,15 @@ const encryptedId = encrypt(user._id)
         { status: "suspended"},
         { new: true } // returns the updated document
      );
-    if(!req.clientIp) return 
+  
+    const clientIp = req.clientIp || req.ip || "unknown";
+
 
     const {
       location: {
         regionName
       }, time, ipAddress, status
-    } = await getUserIpFunc(req.clientIp)
+    } = await getUserIpFunc(clientIp)
 
     if(status !== "success"){
      throw new Error(status)
