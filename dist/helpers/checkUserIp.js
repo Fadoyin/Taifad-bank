@@ -20,7 +20,7 @@ const getUserIpFunc = (ip) => __awaiter(void 0, void 0, void 0, function* () {
         console.log("ipInput", ip);
         const response = yield axios_1.default.get(`http://ip-api.com/json/${ip}`);
         const ipdata = response.data;
-        console.log("ipdata", ipdata);
+        console.log("this is clientIp", ip);
         if (ipdata.status === "fail") {
             return {
                 time: (0, timeFormater_1.timeFormaterFunc)(),

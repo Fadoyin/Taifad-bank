@@ -98,11 +98,10 @@ exports.loginController = (0, express_async_handler_1.default)((req, res) => __a
         if (user.failedLoginCount === 2) {
             yield user_1.default.findOneAndUpdate({ email }, { status: "suspended" }, { new: true } // returns the updated document
             );
-            if (!req.clientIp)
-                return;
-            const { location: { regionName }, time, ipAddress, status } = yield (0, checkUserIp_1.getUserIpFunc)(req.clientIp);
+            const clientIp = req.clientIp || req.ip || "unknown";
+            const { location: { regionName }, time, ipAddress, status } = yield (0, checkUserIp_1.getUserIpFunc)(clientIp);
             if (status !== "success") {
-                throw new Error("Failed to obtain user ip");
+                throw new Error(status);
             }
             yield (0, mailjetSendMail_1.default)(req, res, {
                 subject: "Failed Loging Attempt",
@@ -169,7 +168,7 @@ exports.loginController = (0, express_async_handler_1.default)((req, res) => __a
             return;
         const { location: { regionName }, time, ipAddress, status } = yield (0, checkUserIp_1.getUserIpFunc)(req.clientIp);
         if (status !== "success") {
-            throw new Error("Failed to obtain user ip");
+            throw new Error(status);
         }
         yield (0, mailjetSendMail_1.default)(req, res, {
             subject: "Failed Loging Attempt",
