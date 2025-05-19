@@ -18,6 +18,7 @@ dotenv.config()
 // component dependency
 import dbConnectFunc from "./config/dbConnect";
 import userRouter from "./routes/userRoutes";
+import { getUserIpFunc } from "./helpers/checkUserIp"
 
 
 // initiating app
@@ -41,13 +42,12 @@ app.use(express.static(path.join(__dirname,"public")))
 
 
 app.get('/ip', async (req, res) => {
-    const ip = req.clientIp;
+    const ip = req.clientIp || req.ip || "unknown";
   
     try {
       // Replace with your preferred IP geolocation API
-      const response = await axios.get(`http://ip-api.com/json/${ip}`);
-      const location = response.data;
-  
+      const response = await getUserIpFunc(ip)
+     const location = response
       res.json({
         location
       });
