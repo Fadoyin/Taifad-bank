@@ -8,7 +8,7 @@ export const getUserIpFunc = async (ip: string): Promise<IpAddressInfo> => {
     const response = await axios.get(`http://ip-api.com/json/${ip}`);
     const ipdata = response.data;
 
-    console.log("ipdata", ipdata);
+   
 
     if (ipdata.status === "fail") {
       return {

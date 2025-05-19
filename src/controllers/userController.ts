@@ -136,7 +136,7 @@ const encryptedId = encrypt(user._id)
     } = await getUserIpFunc(req.clientIp)
 
     if(status !== "success"){
-     throw new Error("Failed to obtain user ip")
+     throw new Error(status)
     }
 
   await sendMailjetEmail(req, res, {
@@ -226,7 +226,7 @@ const { isEmailVerified } = user;
     } = await getUserIpFunc(req.clientIp)
 
     if(status !== "success"){
-     throw new Error("Failed to obtain user ip")
+     throw new Error(status)
     }
 
   await sendMailjetEmail(req, res, {
