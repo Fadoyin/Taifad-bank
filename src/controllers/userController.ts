@@ -132,7 +132,6 @@ const encryptedId = encrypt(user._id)
     const {
       location: {
         regionName
-
       }, time, ipAddress, status
     } = await getUserIpFunc(req.clientIp)
 
@@ -218,23 +217,38 @@ const { isEmailVerified } = user;
   
  // check if user is suspended
   if (user.status === "suspended") { 
-    await sendMailjetEmail(req, res, {
-      subject: "Login Failed",
-      to: [
-        {
-          email,
-           name: user.fullName
+    if(!req.clientIp) return 
+
+    const {
+      location: {
+        regionName
+      }, time, ipAddress, status
+    } = await getUserIpFunc(req.clientIp)
+
+    if(status !== "success"){
+     throw new Error("Failed to obtain user ip")
+    }
+
+  await sendMailjetEmail(req, res, {
+        subject: "Failed Loging Attempt",
+        to: [
+          {
+            email,
+             name: user.fullName
+          }
+        ],
+        emailTemplate: "failedLoginTemplate",
+        mailData: {
+          companyName: "Taifad Bank",
+          userName: user.fullName,
+         link: `${process.env.SERVER_URL}/api/v1/user/account/suspended/activate/${encryptedId}`,
+           verificationCode: undefined,
+           attemptTime: time,
+           ipAddress: ipAddress,
+           location: regionName
         }
-      ],
-      emailTemplate: "failedLoginTemplate",
-      mailData: {
-        companyName: "Taifad bank",
-        userName: user.fullName,
-        link: `${process.env.SERVER_URL}/api/v1/user/account/suspended/activate/${encryptedId}`,
-         verificationCode: undefined
-      }
-  
-    })
+
+      })
  
   throw new Error("Account suspended; to activate, please check your mail.")
 }
@@ -364,7 +378,7 @@ res.status(401).json({
     ],
    
     mailData: {
-      companyName: "online bank assessment",
+      companyName: "Taifad bank",
       userName: fullName,
       link: "",
       verificationCode:code
@@ -502,8 +516,8 @@ export const registerPhoneController = expressAsyncHandler(async (req: IGetUserA
   const { phone } = req.body
   
 
-  const isIdVallid = id && isValidObjectId(id.toString());
-  if (!id || !isIdVallid) {
+  const isIdValid = id && isValidObjectId(id.toString());
+  if (!id || !isIdValid) {
      res.status(404).json({
       status: "failed",
       message: "Invaild id or id not found",
@@ -550,12 +564,12 @@ export const verifyPhoneController = expressAsyncHandler(async (req:IGetUserAuth
   const id = req.user?._id
   const { OTP } = req.body
   if (!id || !OTP) { 
-    throw new Error("Missing crredentials")
+    throw new Error("Missing credentials")
  }
 
  
-  const isIdVallid = isValidObjectId(id.toString());
-  if (!id || !isIdVallid) {
+  const isIdValid = isValidObjectId(id.toString());
+  if (!id || !isIdValid) {
      res.status(404).json({
       status: "failed",
       message: "Invaild id or id not found",
@@ -612,8 +626,8 @@ export const getSingleController = expressAsyncHandler(async (req, res): Promise
   
   const { id } = req.params;
   const decryptedId = decrypt(id)
-  const isIdVallid = isValidObjectId(decryptedId.toString());
-  if (!id || !isIdVallid) {
+  const isIdValid = isValidObjectId(decryptedId.toString());
+  if (!id || !isIdValid) {
      res.status(404).json({
       status: "failed",
       message: "Invaild id or id not found",
@@ -644,8 +658,8 @@ export const deleteController = expressAsyncHandler(async (req: IGetUserAuthInfo
   const { id } = req.params;
   
   const decryptedId = decrypt(id)
-  const isIdVallid = isValidObjectId(decryptedId.toString());
-  if (!id || !isIdVallid) {
+  const isIdValid = isValidObjectId(decryptedId.toString());
+  if (!id || !isIdValid) {
      res.status(404).json({
       status: "failed",
       message: "Invaild id or id not found",
@@ -826,7 +840,7 @@ export const suspendedAccountActivation = expressAsyncHandler(async (req: IGetUs
     loginUrl:`${process.env.SERVER_URL}/api/v1/user/login`
     
   })
-  // send user an otp to verifiy user
+ 
 
 }
 )
