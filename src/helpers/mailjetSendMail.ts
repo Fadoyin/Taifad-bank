@@ -32,8 +32,8 @@ const sendMailjetEmail = async (req:Request, res:Response, options: mailSenderTy
           Messages: [
             {
               From: {
-                Email: 'ukonulucky@gmail.com',
-                Name: 'SmartTek Bank',
+                Email: 'fadoyint@gmail.com',
+                Name: 'Taifad Bank',
               },
               To: [
                 {
